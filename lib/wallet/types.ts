@@ -8,6 +8,8 @@ export interface WalletSubject {
   cardNumber: string;
   roleLabel: string;
   qrValue: string;
+  expiryDate?: string | null;
+  associationName?: string | null;
 }
 
 export function isWalletEntityType(value: string): value is WalletEntityType {

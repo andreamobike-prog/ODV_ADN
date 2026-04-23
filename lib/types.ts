@@ -231,6 +231,7 @@ export interface VolontarioDetail {
 export interface TesseraSettings {
   id: string;
   organizzazione_id: string;
+  walletwallet_visual_config?: unknown;
   nome_associazione_tessera: string | null;
   titolo_tessera: string | null;
   etichetta_codice: string | null;

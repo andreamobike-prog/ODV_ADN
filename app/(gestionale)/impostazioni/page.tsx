@@ -1,14 +1,13 @@
-import { getOrganizzazioneSettings, getTesseraSettings } from '@/lib/data';
+import { getOrganizzazioneSettings } from '@/lib/data';
+import { getWalletWalletConfig } from '@/lib/wallet/provider/getWalletWalletConfig';
 import { ImpostazioniPageClient } from './ImpostazioniPageClient';
 
 export default async function ImpostazioniPage() {
   const settings = (await getOrganizzazioneSettings()) as any;
-  const tesseraSettings = (await getTesseraSettings()) as any;
+  const walletConfig = await getWalletWalletConfig();
 
   return (
     <ImpostazioniPageClient
-      logoUrl={tesseraSettings?.logo_url ?? null}
-      immagineCentraleUrl={tesseraSettings?.immagine_centrale_url ?? null}
       nomeAssociazione={settings?.nome_associazione ?? ''}
       sottotitoloAssociazione={settings?.sottotitolo_associazione ?? ''}
       logoGestionaleUrl={settings?.logo_gestionale_url ?? null}
@@ -37,9 +36,7 @@ export default async function ImpostazioniPage() {
       ricevutaTestoNotaFinale={settings?.ricevuta_testo_nota_finale ?? ''}
       bolloAttivo={Boolean(settings?.bollo_attivo)}
       bolloImporto={Number(settings?.bollo_importo ?? 0)}
-      nomeAssociazioneTessera={tesseraSettings?.nome_associazione_tessera ?? ''}
-      coloreSfondoTessera={tesseraSettings?.colore_sfondo ?? '#998DB4'}
-      coloreTestoTessera={tesseraSettings?.colore_testo ?? '#FFFFFF'}
+      walletConfig={walletConfig}
     />
   );
 }

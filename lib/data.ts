@@ -1011,6 +1011,7 @@ export async function getTesseraSettings(): Promise<TesseraSettings | null> {
     .select(`
       id,
       organizzazione_id,
+      walletwallet_visual_config,
       nome_associazione_tessera,
       titolo_tessera,
       etichetta_codice,

@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSupabaseServerClient } from '@/lib/supabase-server';
+import { normalizeWalletWalletVisualConfig } from '@/lib/wallet/provider/normalizeWalletWalletConfig';
+import type { WalletWalletVisualConfig } from '@/lib/wallet/provider/types';
 
 type Result<T = unknown> =
   | { ok: true; data: T }
@@ -111,13 +113,12 @@ export async function salvaImpostazioniAction(payload: {
   ricevutaTestoNotaFinale: string;
   bolloAttivo: boolean;
   bolloImporto: number;
-  nomeAssociazioneTessera: string;
-  coloreSfondoTessera: string;
-  coloreTestoTessera: string;
+  walletConfig: WalletWalletVisualConfig;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     const supabase = await getSupabaseServerClient();
     const organizzazioneId = '11111111-1111-1111-1111-111111111111';
+    const walletConfig = normalizeWalletWalletVisualConfig(payload.walletConfig);
 
     const { error: orgError } = await supabase
       .from('organizzazione_settings')
@@ -164,9 +165,7 @@ export async function salvaImpostazioniAction(payload: {
       .upsert(
         {
           organizzazione_id: organizzazioneId,
-          nome_associazione_tessera: payload.nomeAssociazioneTessera.trim(),
-          colore_sfondo: payload.coloreSfondoTessera.trim(),
-          colore_testo: payload.coloreTestoTessera.trim(),
+          walletwallet_visual_config: walletConfig,
         },
         { onConflict: 'organizzazione_id' }
       );

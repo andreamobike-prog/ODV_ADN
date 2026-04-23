@@ -1,6 +1,8 @@
 import { Buffer } from 'node:buffer';
 import type { WalletSubject } from '@/lib/wallet/types';
+import { buildProviderPassPayload } from '@/lib/wallet/provider/buildProviderPassPayload';
 import { getWalletProviderConfig } from '@/lib/wallet/provider/config';
+import { getWalletWalletConfig } from '@/lib/wallet/provider/getWalletWalletConfig';
 
 export class ExternalPkpassProviderError extends Error {
   constructor(message = 'Impossibile generare la tessera Apple Wallet.') {
@@ -36,6 +38,8 @@ async function readProviderError(response: Response) {
 
 export async function createExternalPkpass(subject: WalletSubject): Promise<Buffer> {
   const { apiKey, endpoint } = getWalletProviderConfig();
+  const config = await getWalletWalletConfig();
+  const payload = buildProviderPassPayload(subject, config);
 
   let response: Response;
 
@@ -46,12 +50,7 @@ export async function createExternalPkpass(subject: WalletSubject): Promise<Buff
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        barcodeValue: subject.qrValue,
-        barcodeFormat: 'QR',
-        title: subject.fullName,
-        colorPreset: 'dark',
-      }),
+      body: JSON.stringify(payload),
       cache: 'no-store',
     });
   } catch {

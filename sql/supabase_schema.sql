@@ -698,6 +698,9 @@ create index if not exists idx_soci_email on public.soci (email);
 create index if not exists idx_soci_codice_fiscale on public.soci (codice_fiscale);
 create index if not exists idx_volontari_org on public.volontari (organizzazione_id);
 create index if not exists idx_volontari_tipologia on public.volontari (tipologia);
+
+alter table public.tessera_settings
+add column if not exists walletwallet_visual_config jsonb;
 create index if not exists idx_pagamenti_socio on public.pagamenti_soci (socio_id);
 create index if not exists idx_gruppi_org on public.gruppi (organizzazione_id);
 create index if not exists idx_eventi_org on public.eventi (organizzazione_id);

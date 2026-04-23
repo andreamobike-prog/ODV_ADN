@@ -1,8 +1,8 @@
 # Provider esterno PKPASS
 
-## Flusso
+## Flusso aggiornato
 
-Il pulsante `Aggiungi ad Apple Wallet` nelle schede socio e volontario chiama:
+Il pulsante `Aggiungi ad Apple Wallet` continua a chiamare:
 
 - `GET /api/wallet/apple/member/:id`
 - `GET /api/wallet/apple/volunteer/:id`
@@ -10,49 +10,76 @@ Il pulsante `Aggiungi ad Apple Wallet` nelle schede socio e volontario chiama:
 La route:
 
 1. valida `type`
-2. recupera i dati reali da Supabase con `getWalletSubject()`
-3. legge `WALLETWALLET_API_KEY` solo lato server
-4. chiama `POST https://api.walletwallet.dev/api/pkpass`
-5. restituisce al browser il file `.pkpass` come attachment
+2. recupera il soggetto reale con `getWalletSubject()`
+3. legge la configurazione visuale ufficiale con `getWalletWalletConfig()`
+4. normalizza la configurazione con `normalizeWalletWalletConfig()`
+5. costruisce il payload provider con `buildProviderPassPayload(subject, config)`
+6. chiama `POST https://api.walletwallet.dev/api/pkpass`
+7. restituisce al browser il file `.pkpass`
 
-Il barcode inviato al provider contiene sempre:
+## Configurazione condivisa
 
-- `member:<id>` per i soci
-- `volunteer:<id>` per i volontari
+La sorgente ufficiale della configurazione WalletWallet e `tessera_settings.walletwallet_visual_config`.
 
-## Sicurezza
+La stessa configurazione viene usata da:
 
-- La API key vive solo nel server.
-- Il client chiama solo la route locale `/api/wallet/apple/...`.
-- La chiave non viene serializzata in componenti React e non viene loggata.
-- Se `WALLETWALLET_API_KEY` manca o è vuota, la UI mostra un errore leggibile.
+- editor in `app/(gestionale)/impostazioni`
+- preview in Impostazioni
+- builder del payload verso WalletWallet
 
-## Variabili ambiente richieste
+Se il JSON non esiste ancora, `getWalletWalletConfig()` applica fallback sensati e una migrazione minima dai dati legacy.
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-WALLETWALLET_API_KEY=
-```
+## Campi supportati dal provider
 
-## File creati o modificati
+Il payload generato verso WalletWallet usa:
 
-- `lib/wallet/types.ts`
-- `lib/wallet/getWalletSubject.ts`
-- `lib/wallet/provider/config.ts`
+- `barcodeValue`
+- `barcodeFormat`
+- `logoText`
+- `colorPreset`
+- `headerFields`
+- `primaryFields`
+- `secondaryFields`
+- `backFields`
+
+Regola chiave: il provider reale rende in modo stabile un solo `primaryField`. Se la configurazione ne contiene piu di uno, il primo resta in `primaryFields` e i successivi vengono spostati all'inizio di `secondaryFields`.
+
+`barcodeValue` usa il codice reale del soggetto quando disponibile (`cardNumber`), altrimenti `qrValue`, con `barcodeFormat = "QR"`.
+
+## Placeholder dinamici
+
+I `value` dei campi possono contenere placeholder string-based:
+
+- `{{fullName}}`
+- `{{cardNumber}}`
+- `{{roleLabel}}`
+- `{{email}}`
+- `{{id}}`
+- `{{expiryDate}}`
+- `{{associationName}}`
+
+La sostituzione avviene nel builder condiviso prima della chiamata al provider.
+
+## Raccomandazioni layout
+
+- usare `logoText = "Angeli dei Navigli ODV"` come default
+- usare `colorPreset = "dark"` come default
+- mantenere `primaryFields` limitato a `[{ label: "TESSERA", value: "{{roleLabel}} 2026" }]`
+- mettere il nome completo in `secondaryFields` o `backFields`
+- evitare layout con piu primary field grandi, che nel provider reale possono sovrapporsi
+
+## File principali
+
+- `lib/wallet/provider/normalizeWalletWalletConfig.ts`
+- `lib/wallet/provider/getWalletWalletConfig.ts`
+- `lib/wallet/provider/buildProviderPassPayload.ts`
 - `lib/wallet/provider/createExternalPkpass.ts`
-- `app/api/wallet/apple/[type]/[id]/route.ts`
-- `components/wallet/AppleWalletButton.tsx`
-- `components/soci/SocioDetailClient.tsx`
-- `components/volontari/VolontarioDetailClient.tsx`
-- `.env.example`
-- `docs/external-pkpass-provider.md`
+- `app/(gestionale)/impostazioni/ImpostazioniPageClient.tsx`
+- `app/(gestionale)/impostazioni/actions.ts`
+- `components/wallet/WalletWalletPassPreview.tsx`
 
-## Test locale
+## Note operative
 
-1. imposta `WALLETWALLET_API_KEY` in `.env.local`
-2. avvia il progetto con `npm run build` o `npm run dev`
-3. apri una scheda socio o volontario
-4. clicca `Aggiungi ad Apple Wallet`
-5. verifica che venga scaricato un file `.pkpass`
-6. se la chiave manca, verifica che la UI mostri l'errore di configurazione
+- La preview in Impostazioni e ora allineata alle regole del provider WalletWallet.
+- Il layout finale puo differire leggermente da Apple Wallet per font, spaziature e densita.
+- Se il database contiene configurazioni legacy con `auxiliaryFields`, il sistema le migra in `secondaryFields` durante la normalizzazione.
