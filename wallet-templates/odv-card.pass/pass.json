@@ -1,0 +1,18 @@
+{
+  "formatVersion": 1,
+  "passTypeIdentifier": "pass.example.odv.card",
+  "serialNumber": "template",
+  "teamIdentifier": "TEAMID",
+  "organizationName": "ODV",
+  "description": "Tessera digitale ODV",
+  "logoText": "ODV",
+  "foregroundColor": "rgb(255,255,255)",
+  "backgroundColor": "rgb(147,12,77)",
+  "labelColor": "rgb(245,232,247)",
+  "storeCard": {
+    "primaryFields": [],
+    "secondaryFields": [],
+    "auxiliaryFields": [],
+    "backFields": []
+  }
+}

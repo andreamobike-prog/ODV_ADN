@@ -1,0 +1,227 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "onMatchHeaders": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/api/apple-wallet/[publicToken]",
+      "regex": "^/api/apple\\-wallet/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPpublicToken": "nxtPpublicToken"
+      },
+      "namedRegex": "^/api/apple\\-wallet/(?<nxtPpublicToken>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/wallet/apple/[type]/[id]",
+      "regex": "^/api/wallet/apple/([^/]+?)/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPtype": "nxtPtype",
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/wallet/apple/(?<nxtPtype>[^/]+?)/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/soci/ricevuta/[pagamentoId]",
+      "regex": "^/soci/ricevuta/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPpagamentoId": "nxtPpagamentoId"
+      },
+      "namedRegex": "^/soci/ricevuta/(?<nxtPpagamentoId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/soci/[id]",
+      "regex": "^/soci/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/soci/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/tessera/[publicToken]",
+      "regex": "^/tessera/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPpublicToken": "nxtPpublicToken"
+      },
+      "namedRegex": "^/tessera/(?<nxtPpublicToken>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/volontari/[id]",
+      "regex": "^/volontari/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/volontari/(?<nxtPid>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/accessi",
+      "regex": "^/accessi(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/accessi(?:/)?$"
+    },
+    {
+      "page": "/api/health",
+      "regex": "^/api/health(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/health(?:/)?$"
+    },
+    {
+      "page": "/api/paypal/capture-order",
+      "regex": "^/api/paypal/capture\\-order(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/paypal/capture\\-order(?:/)?$"
+    },
+    {
+      "page": "/api/paypal/create-order",
+      "regex": "^/api/paypal/create\\-order(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/paypal/create\\-order(?:/)?$"
+    },
+    {
+      "page": "/assistenza",
+      "regex": "^/assistenza(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/assistenza(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/eventi",
+      "regex": "^/eventi(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/eventi(?:/)?$"
+    },
+    {
+      "page": "/forgot-password",
+      "regex": "^/forgot\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/forgot\\-password(?:/)?$"
+    },
+    {
+      "page": "/gruppi",
+      "regex": "^/gruppi(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/gruppi(?:/)?$"
+    },
+    {
+      "page": "/impostazioni",
+      "regex": "^/impostazioni(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/impostazioni(?:/)?$"
+    },
+    {
+      "page": "/iscriviti",
+      "regex": "^/iscriviti(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/iscriviti(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/soci",
+      "regex": "^/soci(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/soci(?:/)?$"
+    },
+    {
+      "page": "/strumenti/ripristino-migrazione",
+      "regex": "^/strumenti/ripristino\\-migrazione(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/strumenti/ripristino\\-migrazione(?:/)?$"
+    },
+    {
+      "page": "/tessera",
+      "regex": "^/tessera(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/tessera(?:/)?$"
+    },
+    {
+      "page": "/tessere",
+      "regex": "^/tessere(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/tessere(?:/)?$"
+    },
+    {
+      "page": "/tutorial",
+      "regex": "^/tutorial(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/tutorial(?:/)?$"
+    },
+    {
+      "page": "/update-password",
+      "regex": "^/update\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/update\\-password(?:/)?$"
+    },
+    {
+      "page": "/volontari",
+      "regex": "^/volontari(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/volontari(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

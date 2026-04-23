@@ -1,0 +1,1 @@
+globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/paypal/create-order/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"/Users/andrealoiudice/Downloads/odv-nextjs-complete/app/api/paypal/create-order/route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};
