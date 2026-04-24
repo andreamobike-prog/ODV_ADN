@@ -2,22 +2,17 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { ImageUp, Plus, Trash2 } from 'lucide-react';
+import { ImageUp } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { WalletWalletPassPreview } from '@/components/wallet/WalletWalletPassPreview';
 import { buildProviderPassPayload } from '@/lib/wallet/provider/buildProviderPassPayload';
-import { WALLETWALLET_PREVIEW_COLOR_PRESETS } from '@/lib/wallet/provider/getWalletWalletPreviewTheme';
-import { resolveWalletWalletAssets } from '@/lib/wallet/provider/resolveWalletWalletAssets';
 import {
   salvaImpostazioniAction,
   uploadLogoGestionaleAction,
 } from './actions';
-import {
-  WALLETWALLET_FIELD_LIMITS,
-  type WalletField,
-  type WalletWalletVisualConfig,
-} from '@/lib/wallet/provider/types';
+import type { WalletWalletVisualConfig } from '@/lib/wallet/provider/types';
 import { normalizeWalletWalletConfig } from '@/lib/wallet/provider/normalizeWalletWalletConfig';
+import { mapHexToWalletWalletPreset } from '@/lib/wallet/provider/mapHexToWalletWalletPreset';
 
 type Props = {
   nomeAssociazione: string;
@@ -49,172 +44,45 @@ type Props = {
   walletConfig: WalletWalletVisualConfig;
 };
 
-type WalletFieldSection = keyof Pick<
-  WalletWalletVisualConfig,
-  'headerFields' | 'primaryFields' | 'secondaryFields' | 'backFields'
->;
+const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 
-const COLOR_PRESET_OPTIONS = WALLETWALLET_PREVIEW_COLOR_PRESETS;
+function normalizeHexInput(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return '';
+  }
 
-const FIELD_SECTION_LABELS: Record<WalletFieldSection, string> = {
-  headerFields: 'Header fields',
-  primaryFields: 'Primary fields (max 1)',
-  secondaryFields: 'Secondary fields',
-  backFields: 'Back fields',
-};
+  const normalized = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+  return normalized.slice(0, 7);
+}
 
-const PLACEHOLDER_HINTS = [
-  '{{fullName}}',
-  '{{fullNameUpper}}',
-  '{{cardNumber}}',
-  '{{roleLabel}}',
-  '{{email}}',
-  '{{id}}',
-  '{{expiryDate}}',
-  '{{associationName}}',
-];
-
-function cloneFieldList(fields: WalletField[]) {
-  return fields.map((field) => ({ ...field }));
+function isHttpsUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
 
 function validateWalletConfig(config: WalletWalletVisualConfig) {
-  const sections: WalletFieldSection[] = [
-    'headerFields',
-    'primaryFields',
-    'secondaryFields',
-    'backFields',
-  ];
-
   if (!config.logoText.trim()) {
-    return 'Il logo text non puo essere vuoto.';
+    return 'Il titolo card e obbligatorio.';
   }
 
-  for (const section of sections) {
-    const limit = WALLETWALLET_FIELD_LIMITS[section];
+  if (!config.backgroundColor || !HEX_COLOR_PATTERN.test(config.backgroundColor)) {
+    return 'Il colore card deve essere un esadecimale valido nel formato #RRGGBB.';
+  }
 
-    if (config[section].length > limit) {
-      return `${FIELD_SECTION_LABELS[section]} supera il limite consentito.`;
-    }
+  if (config.logoURL?.trim() && !isHttpsUrl(config.logoURL)) {
+    return 'Il link logo deve essere un URL pubblico HTTPS.';
+  }
 
-    for (const field of config[section]) {
-      if (!field.label.trim() || !field.value.trim()) {
-        return `Compila label e value in ${FIELD_SECTION_LABELS[section]}.`;
-      }
-    }
+  if (config.stripURL?.trim() && !isHttpsUrl(config.stripURL)) {
+    return 'Il link immagine centrale deve essere un URL pubblico HTTPS.';
   }
 
   return null;
-}
-
-function WalletFieldsEditor({
-  title,
-  description,
-  fields,
-  limit,
-  warning,
-  onAdd,
-  onRemove,
-  onChange,
-}: {
-  title: string;
-  description?: string;
-  fields: WalletField[];
-  limit: number;
-  warning?: string | null;
-  onAdd: () => void;
-  onRemove: (index: number) => void;
-  onChange: (index: number, key: keyof WalletField, value: string) => void;
-}) {
-  return (
-    <div style={{ display: 'grid', gap: 12 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
-        <div>
-          <div style={{ fontSize: 18, fontWeight: 800 }}>{title}</div>
-          <div className="muted">
-            {fields.length}/{limit} righe configurate
-          </div>
-          {description ? <div className="muted" style={{ marginTop: 4 }}>{description}</div> : null}
-        </div>
-        <button className="button secondary" type="button" onClick={onAdd} disabled={fields.length >= limit}>
-          <Plus size={16} />
-          Aggiungi riga
-        </button>
-      </div>
-
-      {warning ? (
-        <div
-          style={{
-            borderRadius: 12,
-            border: '1px solid #f59e0b',
-            background: '#fffbeb',
-            color: '#92400e',
-            padding: '10px 12px',
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-        >
-          {warning}
-        </div>
-      ) : null}
-
-      {fields.length > 0 ? (
-        fields.map((field, index) => (
-          <div
-            key={`${title}-${index}`}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1.4fr auto',
-              gap: 12,
-              alignItems: 'end',
-              padding: 14,
-              border: '1px solid #e5e7eb',
-              borderRadius: 14,
-              background: '#fff',
-            }}
-          >
-            <div>
-              <label className="muted" style={{ display: 'block', marginBottom: 6 }}>
-                Label
-              </label>
-              <input
-                className="input"
-                value={field.label}
-                onChange={(e) => onChange(index, 'label', e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="muted" style={{ display: 'block', marginBottom: 6 }}>
-                Value
-              </label>
-              <input
-                className="input"
-                value={field.value}
-                onChange={(e) => onChange(index, 'value', e.target.value)}
-              />
-            </div>
-
-            <button className="button secondary" type="button" onClick={() => onRemove(index)}>
-              <Trash2 size={16} />
-            </button>
-          </div>
-        ))
-      ) : (
-        <div
-          style={{
-            border: '1px dashed #cbd5e1',
-            borderRadius: 14,
-            padding: 16,
-            background: '#fff',
-            color: '#64748b',
-          }}
-        >
-          Nessun campo configurato.
-        </div>
-      )}
-    </div>
-  );
 }
 
 export function ImpostazioniPageClient({
@@ -284,22 +152,18 @@ export function ImpostazioniPageClient({
   const [walletVisualConfig, setWalletVisualConfig] = useState<WalletWalletVisualConfig>(
     normalizeWalletWalletConfig(walletConfig)
   );
-  const [walletConfigNotice, setWalletConfigNotice] = useState<{
-    section: WalletFieldSection;
-    message: string;
-  } | null>(null);
-  const normalizedWalletConfig = normalizeWalletWalletConfig(walletVisualConfig);
-  const walletResolvedAssets = resolveWalletWalletAssets(normalizedWalletConfig);
-  const stripLayoutActive = Boolean(
-    normalizedWalletConfig.stripURL?.trim() || walletResolvedAssets.stripURL
+  const [walletConfigError, setWalletConfigError] = useState<string | null>(null);
+  const [walletColorInput, setWalletColorInput] = useState<string>(
+    normalizeWalletWalletConfig(walletConfig).backgroundColor || '#1F2947'
   );
+  const normalizedWalletConfig = normalizeWalletWalletConfig(walletVisualConfig);
   const walletPreviewPayload = buildProviderPassPayload(
     {
       id: 'demo-id',
       type: 'member',
-      fullName: 'Sonia Mangione',
-      email: 'sonia@example.org',
-      cardNumber: 'SOC-2026-001',
+      fullName: 'Andrea Loiudice',
+      email: 'andrea@example.org',
+      cardNumber: 'SOC-297730',
       roleLabel: 'Socio',
       qrValue: 'demo-id',
       expiryDate: '2026-12-31',
@@ -327,59 +191,8 @@ export function ImpostazioniPageClient({
     key: K,
     value: WalletWalletVisualConfig[K]
   ) {
-    setWalletConfigNotice(null);
-    setWalletVisualConfig((current) => {
-      const nextConfig = { ...current, [key]: value };
-
-      if (key === 'stripURL') {
-        return normalizeWalletWalletConfig(nextConfig);
-      }
-
-      return nextConfig;
-    });
-  }
-
-  function updateWalletField(
-    section: WalletFieldSection,
-    index: number,
-    key: keyof WalletField,
-    value: string
-  ) {
-    setWalletConfigNotice(null);
-    setWalletVisualConfig((current) => {
-      const nextFields = cloneFieldList(current[section]);
-      nextFields[index] = { ...nextFields[index], [key]: value };
-      return { ...current, [section]: nextFields };
-    });
-  }
-
-  function addWalletField(section: WalletFieldSection) {
-    if (walletVisualConfig[section].length >= WALLETWALLET_FIELD_LIMITS[section]) {
-      setWalletConfigNotice({
-        section,
-        message:
-          section === 'primaryFields'
-            ? 'WalletWallet supporta un solo primary field. Usa i secondary fields per nome, codice e altri dati.'
-            : `${FIELD_SECTION_LABELS[section]} ha gia raggiunto il limite supportato dal provider.`,
-      });
-      return;
-    }
-
-    setWalletConfigNotice(null);
-    setWalletVisualConfig((current) => {
-      return {
-        ...current,
-        [section]: [...current[section], { label: '', value: '' }],
-      };
-    });
-  }
-
-  function removeWalletField(section: WalletFieldSection, index: number) {
-    setWalletConfigNotice(null);
-    setWalletVisualConfig((current) => ({
-      ...current,
-      [section]: current[section].filter((_, fieldIndex) => fieldIndex !== index),
-    }));
+    setWalletConfigError(null);
+    setWalletVisualConfig((current) => normalizeWalletWalletConfig({ ...current, [key]: value }));
   }
 
   function handleUploadLogoGestionale(file: File | null) {
@@ -401,12 +214,27 @@ export function ImpostazioniPageClient({
     });
   }
 
+  function updateWalletBackgroundColor(value: string) {
+    const normalized = normalizeHexInput(value);
+    setWalletConfigError(null);
+    setWalletColorInput(normalized);
+
+    if (HEX_COLOR_PATTERN.test(normalized)) {
+      setWalletVisualConfig((current) =>
+        normalizeWalletWalletConfig({
+          ...current,
+          backgroundColor: normalized,
+        })
+      );
+    }
+  }
+
   function handleSave() {
     const normalizedConfig = normalizeWalletWalletConfig(walletVisualConfig);
     const validationError = validateWalletConfig(normalizedConfig);
 
     if (validationError) {
-      alert(validationError);
+      setWalletConfigError(validationError);
       return;
     }
 
@@ -446,6 +274,8 @@ export function ImpostazioniPageClient({
         return;
       }
 
+      setWalletConfigError(null);
+      setWalletColorInput(normalizedConfig.backgroundColor || '#1F2947');
       router.refresh();
     });
   }
@@ -555,13 +385,14 @@ export function ImpostazioniPageClient({
             <div className="eyebrow">WalletWallet</div>
 
             <div style={{ marginTop: 14, display: 'grid', gap: 18 }}>
-              <div className="form-grid">
+              <div style={{ display: 'grid', gap: 16 }}>
                 <div>
                   <label className="muted" style={{ display: 'block', marginBottom: 6 }}>
-                    Logo text
+                    Titolo card
                   </label>
                   <input
                     className="input"
+                    placeholder="Angeli dei Navigli ODV"
                     value={walletVisualConfig.logoText}
                     onChange={(e) => updateWalletConfig('logoText', e.target.value)}
                   />
@@ -569,30 +400,33 @@ export function ImpostazioniPageClient({
 
                 <div>
                   <label className="muted" style={{ display: 'block', marginBottom: 6 }}>
-                    Color preset
+                    Colore card
                   </label>
-                  <select
-                    className="input"
-                    value={walletVisualConfig.colorPreset}
-                    onChange={(e) => updateWalletConfig('colorPreset', e.target.value)}
-                  >
-                    {COLOR_PRESET_OPTIONS.map((preset) => (
-                      <option key={preset} value={preset}>
-                        {preset}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ display: 'grid', gridTemplateColumns: '64px 1fr', gap: 12 }}>
+                    <input
+                      className="input"
+                      type="color"
+                      value={walletVisualConfig.backgroundColor || '#1F2947'}
+                      onChange={(e) => updateWalletBackgroundColor(e.target.value)}
+                      style={{ padding: 6, minHeight: 48 }}
+                    />
+                    <input
+                      className="input"
+                      placeholder="#1f2947"
+                      value={walletColorInput}
+                      onChange={(e) => updateWalletBackgroundColor(e.target.value)}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="form-grid">
                 <div>
                   <label className="muted" style={{ display: 'block', marginBottom: 6 }}>
-                    Logo URL o path pubblico
+                    Link logo
                   </label>
                   <input
                     className="input"
-                    placeholder="/logo.png oppure https://..."
+                    type="url"
+                    placeholder="https://..."
                     value={walletVisualConfig.logoURL ?? ''}
                     onChange={(e) => updateWalletConfig('logoURL', e.target.value)}
                   />
@@ -600,11 +434,12 @@ export function ImpostazioniPageClient({
 
                 <div>
                   <label className="muted" style={{ display: 'block', marginBottom: 6 }}>
-                    Strip URL o path pubblico
+                    Link immagine centrale
                   </label>
                   <input
                     className="input"
-                    placeholder="https://... oppure asset tessera"
+                    type="url"
+                    placeholder="https://..."
                     value={walletVisualConfig.stripURL ?? ''}
                     onChange={(e) => updateWalletConfig('stripURL', e.target.value)}
                   />
@@ -614,148 +449,52 @@ export function ImpostazioniPageClient({
               <div
                 style={{
                   borderRadius: 14,
-                  border: '1px solid #f59e0b',
-                  background: '#fffbeb',
-                  color: '#92400e',
+                  border: '1px solid #e2e8f0',
+                  background: '#f8fafc',
+                  color: '#334155',
                   padding: 16,
                   display: 'grid',
-                  gap: 8,
+                  gap: 6,
                 }}
               >
-                <div style={{ fontWeight: 800 }}>
-                  Le immagini del pass reale funzionano solo con URL pubblici HTTPS e piano WalletWallet che supporta logoURL/stripURL.
-                </div>
+                <div style={{ fontWeight: 800 }}>Usa URL pubblici HTTPS.</div>
                 <div style={{ fontSize: 14 }}>
-                  Fallback logo: <code>/logo.png</code>. Per la strip usa un asset pubblico HTTPS oppure l&apos;immagine centrale salvata nelle impostazioni tessera.
+                  Logo e immagine centrale vengono inviati al provider solo se raggiungibili via HTTPS.
                 </div>
               </div>
 
-              {stripLayoutActive ? (
+              {walletConfigError ? (
                 <div
                   style={{
                     borderRadius: 14,
-                    border: '1px solid #0ea5e9',
-                    background: '#f0f9ff',
-                    color: '#0f172a',
+                    border: '1px solid #f59e0b',
+                    background: '#fffbeb',
+                    color: '#92400e',
                     padding: 16,
                     fontSize: 14,
                     fontWeight: 600,
                   }}
                 >
-                  Con immagine centrale attiva, i Primary fields vengono disattivati per evitare sovrapposizioni nel pass reale.
+                  {walletConfigError}
                 </div>
               ) : null}
-
-              <div
-                style={{
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 14,
-                  padding: 16,
-                  background: '#fff',
-                  display: 'grid',
-                  gap: 8,
-                }}
-              >
-                <div style={{ fontWeight: 800 }}>Placeholder supportati</div>
-                <div className="muted">
-                  Usa questi token nei value per comporre i campi dinamici del pass.
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {PLACEHOLDER_HINTS.map((placeholder) => (
-                    <code
-                      key={placeholder}
-                      style={{
-                        padding: '6px 8px',
-                        borderRadius: 999,
-                        background: '#f1f5f9',
-                        fontSize: 12,
-                      }}
-                    >
-                      {placeholder}
-                    </code>
-                  ))}
-                </div>
-              </div>
-
-              <WalletFieldsEditor
-                title="Header fields (max 2)"
-                description="Area alta del fronte. WalletWallet rende al massimo due header fields."
-                fields={walletVisualConfig.headerFields}
-                limit={WALLETWALLET_FIELD_LIMITS.headerFields}
-                warning={
-                  walletConfigNotice?.section === 'headerFields' ? walletConfigNotice.message : null
-                }
-                onAdd={() => addWalletField('headerFields')}
-                onRemove={(index) => removeWalletField('headerFields', index)}
-                onChange={(index, key, value) => updateWalletField('headerFields', index, key, value)}
-              />
-
-              {!stripLayoutActive ? (
-                <WalletFieldsEditor
-                  title="Primary fields (max 1)"
-                  description="Usane al massimo uno solo quando non stai usando la strip image centrale."
-                  fields={walletVisualConfig.primaryFields}
-                  limit={WALLETWALLET_FIELD_LIMITS.primaryFields}
-                  warning={
-                    walletConfigNotice?.section === 'primaryFields'
-                      ? walletConfigNotice.message
-                      : null
-                  }
-                  onAdd={() => addWalletField('primaryFields')}
-                  onRemove={(index) => removeWalletField('primaryFields', index)}
-                  onChange={(index, key, value) =>
-                    updateWalletField('primaryFields', index, key, value)
-                  }
-                />
-              ) : null}
-
-              <WalletFieldsEditor
-                title="Secondary fields"
-                description="Griglia principale sotto l'immagine da usare per nome, codice tessera, scadenza e altri dati frontali."
-                fields={normalizedWalletConfig.secondaryFields}
-                limit={WALLETWALLET_FIELD_LIMITS.secondaryFields}
-                warning={
-                  walletConfigNotice?.section === 'secondaryFields'
-                    ? walletConfigNotice.message
-                    : null
-                }
-                onAdd={() => addWalletField('secondaryFields')}
-                onRemove={(index) => removeWalletField('secondaryFields', index)}
-                onChange={(index, key, value) => updateWalletField('secondaryFields', index, key, value)}
-              />
-
-              <WalletFieldsEditor
-                title="Back fields"
-                description="Mostrati solo sul retro della tessera."
-                fields={walletVisualConfig.backFields}
-                limit={WALLETWALLET_FIELD_LIMITS.backFields}
-                warning={
-                  walletConfigNotice?.section === 'backFields' ? walletConfigNotice.message : null
-                }
-                onAdd={() => addWalletField('backFields')}
-                onRemove={(index) => removeWalletField('backFields', index)}
-                onChange={(index, key, value) => updateWalletField('backFields', index, key, value)}
-              />
             </div>
           </div>
 
           <div className="card">
             <div className="eyebrow">Anteprima Wallet</div>
-            <div className="muted" style={{ marginTop: 8 }}>
-              Anteprima simulata del layout reale supportato dal provider WalletWallet con header, strip centrale pulita, dati sotto immagine e QR in basso.
-            </div>
             <div style={{ marginTop: 12 }}>
               <WalletWalletPassPreview
                 logoText={walletPreviewPayload.logoText || normalizedWalletConfig.logoText}
-                colorPreset={walletPreviewPayload.colorPreset || normalizedWalletConfig.colorPreset}
+                colorPreset={
+                  walletPreviewPayload.colorPreset ||
+                  mapHexToWalletWalletPreset(normalizedWalletConfig.backgroundColor || '#1f2947')
+                }
                 logoURL={walletPreviewPayload.logoURL}
                 stripURL={walletPreviewPayload.stripURL}
                 backgroundColor={walletPreviewPayload.backgroundColor}
-                headerFields={walletPreviewPayload.headerFields ?? []}
                 secondaryFields={walletPreviewPayload.secondaryFields ?? []}
-                backFields={walletPreviewPayload.backFields ?? []}
                 barcodeValue={walletPreviewPayload.barcodeValue}
-                assetWarnings={walletResolvedAssets.warnings}
               />
             </div>
           </div>

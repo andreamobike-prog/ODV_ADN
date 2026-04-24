@@ -1,5 +1,6 @@
 import { getSupabaseServerClient } from '@/lib/supabase-server';
 import { normalizeWalletWalletVisualConfig } from '@/lib/wallet/provider/normalizeWalletWalletConfig';
+import { getWalletWalletPresetHex } from '@/lib/wallet/provider/mapHexToWalletWalletPreset';
 import {
   DEFAULT_WALLETWALLET_VISUAL_CONFIG,
   type WalletWalletVisualConfig,
@@ -35,7 +36,7 @@ function mapLegacyWalletConfig(
     typeof tesseraSettings?.colorPreset === 'string' && tesseraSettings.colorPreset.trim()
       ? tesseraSettings.colorPreset
       : typeof tesseraSettings?.colore_sfondo === 'string' &&
-          ['dark', 'light', 'blue', 'green', 'red', 'purple'].includes(
+          ['dark', 'light', 'blue', 'green', 'red', 'purple', 'orange'].includes(
             tesseraSettings.colore_sfondo.trim()
           )
         ? tesseraSettings.colore_sfondo
@@ -47,7 +48,7 @@ function mapLegacyWalletConfig(
       tesseraSettings.nome_associazione_tessera.trim()
         ? tesseraSettings.nome_associazione_tessera
         : associationName || DEFAULT_WALLETWALLET_VISUAL_CONFIG.logoText,
-    colorPreset: legacyColorPreset,
+    backgroundColor: getWalletWalletPresetHex(legacyColorPreset),
     logoURL:
       typeof tesseraSettings?.logo_url === 'string' && tesseraSettings.logo_url.trim()
         ? tesseraSettings.logo_url.trim()

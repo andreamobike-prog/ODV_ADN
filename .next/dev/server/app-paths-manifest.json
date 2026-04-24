@@ -1,7 +1,6 @@
 {
-  "/api/wallet/apple/[type]/[id]/route": "app/api/wallet/apple/[type]/[id]/route.js",
+  "/login/page": "app/login/page.js",
   "/(gestionale)/page": "app/(gestionale)/page.js",
-  "/(gestionale)/impostazioni/page": "app/(gestionale)/impostazioni/page.js",
-  "/(gestionale)/soci/page": "app/(gestionale)/soci/page.js",
-  "/(gestionale)/soci/[id]/page": "app/(gestionale)/soci/[id]/page.js"
+  "/(gestionale)/dashboard/page": "app/(gestionale)/dashboard/page.js",
+  "/(gestionale)/impostazioni/page": "app/(gestionale)/impostazioni/page.js"
 }

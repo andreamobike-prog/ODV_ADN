@@ -2,7 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSupabaseServerClient } from '@/lib/supabase-server';
-import { normalizeWalletWalletVisualConfig } from '@/lib/wallet/provider/normalizeWalletWalletConfig';
+import {
+  normalizeWalletWalletVisualConfig,
+  toWalletWalletStoredConfig,
+} from '@/lib/wallet/provider/normalizeWalletWalletConfig';
 import type { WalletWalletVisualConfig } from '@/lib/wallet/provider/types';
 
 type Result<T = unknown> =
@@ -119,6 +122,7 @@ export async function salvaImpostazioniAction(payload: {
     const supabase = await getSupabaseServerClient();
     const organizzazioneId = '11111111-1111-1111-1111-111111111111';
     const walletConfig = normalizeWalletWalletVisualConfig(payload.walletConfig);
+    const walletStoredConfig = toWalletWalletStoredConfig(walletConfig);
 
     const { error: orgError } = await supabase
       .from('organizzazione_settings')
@@ -165,7 +169,7 @@ export async function salvaImpostazioniAction(payload: {
       .upsert(
         {
           organizzazione_id: organizzazioneId,
-          walletwallet_visual_config: walletConfig,
+          walletwallet_visual_config: walletStoredConfig,
         },
         { onConflict: 'organizzazione_id' }
       );
