@@ -36,6 +36,20 @@ async function readProviderError(response: Response) {
   }
 }
 
+function normalizeProviderAssetError(message: string) {
+  const lowered = message.toLowerCase();
+
+  if (
+    lowered.includes('logourl') ||
+    lowered.includes('stripurl') ||
+    lowered.includes('backgroundcolor')
+  ) {
+    return 'WalletWallet ha rifiutato gli asset avanzati del pass. Verifica URL pubblici HTTPS per logo e immagine centrale, e che il piano supporti logoURL/stripURL.';
+  }
+
+  return message;
+}
+
 export async function createExternalPkpass(subject: WalletSubject): Promise<Buffer> {
   const { apiKey, endpoint } = getWalletProviderConfig();
   const config = await getWalletWalletConfig();
@@ -62,7 +76,7 @@ export async function createExternalPkpass(subject: WalletSubject): Promise<Buff
   if (!response.ok) {
     const providerMessage = await readProviderError(response);
     const message = providerMessage
-      ? `Provider Apple Wallet: ${providerMessage}`
+      ? `Provider Apple Wallet: ${normalizeProviderAssetError(providerMessage)}`
       : `Provider Apple Wallet ha risposto con errore ${response.status}.`;
 
     throw new ExternalPkpassProviderError(message);

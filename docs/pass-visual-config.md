@@ -11,6 +11,9 @@ Il tipo condiviso `WalletWalletVisualConfig` espone:
 - `logoText`
 - `colorPreset`
 - `barcodeFormat`
+- `logoURL`
+- `stripURL`
+- `backgroundColor`
 - `headerFields`
 - `primaryFields`
 - `secondaryFields`
@@ -30,7 +33,8 @@ La funzione `normalizeWalletWalletConfig()` applica sempre queste regole:
 - rimozione dei campi vuoti
 - extra `primaryFields` spostati in testa ai `secondaryFields`
 - `auxiliaryFields` legacy migrati in `secondaryFields`
-- `colorPreset` limitato a `dark | blue | green | red | purple | orange`, fallback `dark`
+- `colorPreset` limitato a `dark | blue | green | red | purple | orange`, fallback `blue`
+- trim anche di `logoURL`, `stripURL` e `backgroundColor`
 - se manca `logoText`, viene applicato un fallback valido
 
 In sviluppo viene emesso un warning se la configurazione contiene piu di un primary field.
@@ -39,19 +43,20 @@ In sviluppo viene emesso un warning se la configurazione contiene piu di un prim
 
 Se la configurazione e vuota, il sistema inizializza:
 
-- `logoText = "Angeli dei Navigli ODV"`
-- `colorPreset = "dark"`
-- `primaryFields = [{ label: "TESSERA", value: "{{roleLabel}} 2026" }]`
-- `secondaryFields = [{ label: "NOME", value: "{{fullName}}" }, { label: "CODICE", value: "{{cardNumber}}" }, { label: "SCADENZA", value: "{{expiryDate}}" }]`
-- `backFields = [{ label: "EMAIL", value: "{{email}}" }, { label: "ID", value: "{{id}}" }]`
+- `logoText = "ANGELI DEI NAVIGLI"`
+- `colorPreset = "blue"`
+- `primaryFields = []`
+- `secondaryFields = [{ label: "SOCIO", value: "{{fullNameUpper}}" }, { label: "COD. SOCIO", value: "{{cardNumber}}" }, { label: "SCADENZA", value: "{{expiryDate}}" }]`
+- `backFields = [{ label: "Nome", value: "{{fullName}}" }, { label: "Tipo", value: "{{roleLabel}}" }, { label: "Email", value: "{{email}}" }, { label: "ID", value: "{{id}}" }]`
 
-Importante: `{{fullName}}` non deve essere usato come secondo primary field. Il nome completo rende meglio in `secondaryFields` o `backFields`.
+Importante: `{{fullName}}` non deve essere usato come primary field se vuoi il layout con strip panoramica e tre colonne frontali. Il nome completo rende meglio in `secondaryFields` o `backFields`.
 
 ## Placeholder
 
 I `value` supportano:
 
 - `{{fullName}}`
+- `{{fullNameUpper}}`
 - `{{cardNumber}}`
 - `{{roleLabel}}`
 - `{{email}}`
@@ -65,10 +70,11 @@ La preview e la generazione reale del pass condividono lo stesso builder, quindi
 
 La preview interna simula il layout reale supportato dal provider:
 
-- area alta con `logoText` e `headerFields`
-- un solo `primaryField` in evidenza
-- `secondaryFields` in griglia a due colonne
+- area alta con logo a sinistra e `logoText`
+- strip panoramica centrale tramite `stripURL`
+- `secondaryFields` in tre colonne
 - barcode grande nella parte bassa
+- URL asset realmente inviati al provider
 - `backFields` mostrati solo nel riquadro retro
 
 Il layout finale puo differire leggermente da Apple Wallet, ma la preview non usa piu un layout creativo scollegato dal provider reale.

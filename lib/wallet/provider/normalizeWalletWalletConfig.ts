@@ -48,6 +48,8 @@ export function normalizeWalletWalletConfig(value: unknown): WalletWalletVisualC
   const rawHeaderFields = sanitizeFieldList(input.headerFields);
   const legacyAuxiliaryFields = sanitizeFieldList(input.auxiliaryFields);
   const rawBackFields = sanitizeFieldList(input.backFields);
+  const stripURL = sanitizeString(input.stripURL);
+  const stripLayoutActive = Boolean(stripURL);
 
   const primaryField = rawPrimaryFields[0] ?? null;
   const extraPrimaryFields = rawPrimaryFields.slice(1);
@@ -58,24 +60,24 @@ export function normalizeWalletWalletConfig(value: unknown): WalletWalletVisualC
     );
   }
 
-  const secondaryFields = [
-    ...extraPrimaryFields,
-    ...rawSecondaryFields,
-    ...legacyAuxiliaryFields,
-  ].slice(0, WALLETWALLET_FIELD_LIMITS.secondaryFields);
+  if (stripLayoutActive && rawPrimaryFields.length > 0) {
+    warnInDevelopment(
+      'WalletWallet: primaryFields removed because stripURL is active to avoid overlay.'
+    );
+  }
 
-  const primaryFields = primaryField ? [primaryField] : [];
+  const secondaryFieldsSource = stripLayoutActive
+    ? [primaryField, ...extraPrimaryFields, ...rawSecondaryFields, ...legacyAuxiliaryFields]
+    : [...extraPrimaryFields, ...rawSecondaryFields, ...legacyAuxiliaryFields];
+
+  const secondaryFields = secondaryFieldsSource
+    .filter((field): field is WalletField => field !== null)
+    .slice(0, WALLETWALLET_FIELD_LIMITS.secondaryFields);
+
+  const primaryFields = stripLayoutActive ? [] : primaryField ? [primaryField] : [];
 
   const logoText = sanitizeString(input.logoText);
-  const hasPrimaryContent = primaryFields.length > 0;
-  const resolvedLogoText =
-    logoText ||
-    (hasPrimaryContent ? DEFAULT_WALLETWALLET_VISUAL_CONFIG.logoText : 'Tessera associativa');
-
-  const fallbackPrimaryFields =
-    primaryFields.length > 0
-      ? primaryFields
-      : [{ ...DEFAULT_WALLETWALLET_VISUAL_CONFIG.primaryFields[0] }];
+  const resolvedLogoText = logoText || DEFAULT_WALLETWALLET_VISUAL_CONFIG.logoText;
 
   const colorPresetCandidate = sanitizeString(input.colorPreset);
   const colorPreset = VALID_WALLETWALLET_COLOR_PRESETS.includes(
@@ -88,9 +90,16 @@ export function normalizeWalletWalletConfig(value: unknown): WalletWalletVisualC
     logoText: resolvedLogoText,
     colorPreset,
     barcodeFormat: 'QR',
+    logoURL: sanitizeString(input.logoURL),
+    stripURL,
+    backgroundColor: sanitizeString(input.backgroundColor),
     headerFields: rawHeaderFields.slice(0, WALLETWALLET_FIELD_LIMITS.headerFields),
-    primaryFields: fallbackPrimaryFields.slice(0, WALLETWALLET_FIELD_LIMITS.primaryFields),
+    primaryFields:
+      primaryFields.length > 0
+        ? primaryFields.slice(0, WALLETWALLET_FIELD_LIMITS.primaryFields)
+        : [],
     secondaryFields,
+    auxiliaryFields: [],
     backFields: rawBackFields.slice(0, WALLETWALLET_FIELD_LIMITS.backFields),
   };
 }
@@ -98,4 +107,3 @@ export function normalizeWalletWalletConfig(value: unknown): WalletWalletVisualC
 export function normalizeWalletWalletVisualConfig(value: unknown): WalletWalletVisualConfig {
   return normalizeWalletWalletConfig(value);
 }
-

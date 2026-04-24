@@ -7,9 +7,13 @@ export type WalletWalletVisualConfig = {
   logoText: string;
   colorPreset: 'dark' | 'blue' | 'green' | 'red' | 'purple' | 'orange' | string;
   barcodeFormat: 'QR';
+  logoURL?: string;
+  stripURL?: string;
+  backgroundColor?: string;
   headerFields: WalletField[];
   primaryFields: WalletField[];
   secondaryFields: WalletField[];
+  auxiliaryFields: WalletField[];
   backFields: WalletField[];
 };
 
@@ -18,9 +22,13 @@ export type WalletWalletPayload = {
   barcodeFormat: 'QR';
   logoText?: string;
   colorPreset?: string;
+  logoURL?: string;
+  stripURL?: string;
+  backgroundColor?: string;
   headerFields?: WalletField[];
   primaryFields?: WalletField[];
   secondaryFields?: WalletField[];
+  auxiliaryFields?: WalletField[];
   backFields?: WalletField[];
 };
 
@@ -41,17 +49,23 @@ export const VALID_WALLETWALLET_COLOR_PRESETS = [
 ] as const;
 
 export const DEFAULT_WALLETWALLET_VISUAL_CONFIG: WalletWalletVisualConfig = {
-  logoText: 'Angeli dei Navigli ODV',
-  colorPreset: 'dark',
+  logoText: 'ANGELI DEI NAVIGLI',
+  colorPreset: 'blue',
   barcodeFormat: 'QR',
+  logoURL: '',
+  stripURL: '',
+  backgroundColor: '',
   headerFields: [],
-  primaryFields: [{ label: 'TESSERA', value: '{{roleLabel}} 2026' }],
+  primaryFields: [],
   secondaryFields: [
-    { label: 'NOME', value: '{{fullName}}' },
-    { label: 'CODICE', value: '{{cardNumber}}' },
+    { label: 'SOCIO', value: '{{fullName}}' },
+    { label: 'COD. SOCIO', value: '{{cardNumber}}' },
     { label: 'SCADENZA', value: '{{expiryDate}}' },
   ],
+  auxiliaryFields: [],
   backFields: [
+    { label: 'Nome', value: '{{fullName}}' },
+    { label: 'TIPO', value: '{{roleLabel}}' },
     { label: 'EMAIL', value: '{{email}}' },
     { label: 'ID', value: '{{id}}' },
   ],

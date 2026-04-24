@@ -48,6 +48,15 @@ function mapLegacyWalletConfig(
         ? tesseraSettings.nome_associazione_tessera
         : associationName || DEFAULT_WALLETWALLET_VISUAL_CONFIG.logoText,
     colorPreset: legacyColorPreset,
+    logoURL:
+      typeof tesseraSettings?.logo_url === 'string' && tesseraSettings.logo_url.trim()
+        ? tesseraSettings.logo_url.trim()
+        : '',
+    stripURL:
+      typeof tesseraSettings?.immagine_centrale_url === 'string' &&
+      tesseraSettings.immagine_centrale_url.trim()
+        ? tesseraSettings.immagine_centrale_url.trim()
+        : '',
   };
 }
 

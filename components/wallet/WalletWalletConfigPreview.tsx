@@ -2,6 +2,7 @@
 
 import { WalletWalletPassPreview } from '@/components/wallet/WalletWalletPassPreview';
 import { buildProviderPassPayload } from '@/lib/wallet/provider/buildProviderPassPayload';
+import { resolveWalletWalletAssets } from '@/lib/wallet/provider/resolveWalletWalletAssets';
 import type { WalletWalletVisualConfig } from '@/lib/wallet/provider/types';
 import type { WalletSubject } from '@/lib/wallet/types';
 
@@ -27,16 +28,20 @@ export function WalletWalletConfigPreview({
   sampleSubject = DEFAULT_SAMPLE_SUBJECT,
 }: Props) {
   const payload = buildProviderPassPayload(sampleSubject, config);
+  const assets = resolveWalletWalletAssets(config);
 
   return (
     <WalletWalletPassPreview
       logoText={payload.logoText || config.logoText}
       colorPreset={payload.colorPreset || config.colorPreset}
+      logoURL={payload.logoURL}
+      stripURL={payload.stripURL}
+      backgroundColor={payload.backgroundColor}
       headerFields={payload.headerFields ?? []}
-      primaryFields={payload.primaryFields ?? []}
       secondaryFields={payload.secondaryFields ?? []}
       backFields={payload.backFields ?? []}
       barcodeValue={payload.barcodeValue}
+      assetWarnings={assets.warnings}
     />
   );
 }

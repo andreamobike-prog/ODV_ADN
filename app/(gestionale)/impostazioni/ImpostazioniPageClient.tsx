@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { WalletWalletPassPreview } from '@/components/wallet/WalletWalletPassPreview';
 import { buildProviderPassPayload } from '@/lib/wallet/provider/buildProviderPassPayload';
 import { WALLETWALLET_PREVIEW_COLOR_PRESETS } from '@/lib/wallet/provider/getWalletWalletPreviewTheme';
+import { resolveWalletWalletAssets } from '@/lib/wallet/provider/resolveWalletWalletAssets';
 import {
   salvaImpostazioniAction,
   uploadLogoGestionaleAction,
@@ -64,6 +65,7 @@ const FIELD_SECTION_LABELS: Record<WalletFieldSection, string> = {
 
 const PLACEHOLDER_HINTS = [
   '{{fullName}}',
+  '{{fullNameUpper}}',
   '{{cardNumber}}',
   '{{roleLabel}}',
   '{{email}}',
@@ -287,6 +289,10 @@ export function ImpostazioniPageClient({
     message: string;
   } | null>(null);
   const normalizedWalletConfig = normalizeWalletWalletConfig(walletVisualConfig);
+  const walletResolvedAssets = resolveWalletWalletAssets(normalizedWalletConfig);
+  const stripLayoutActive = Boolean(
+    normalizedWalletConfig.stripURL?.trim() || walletResolvedAssets.stripURL
+  );
   const walletPreviewPayload = buildProviderPassPayload(
     {
       id: 'demo-id',
@@ -322,7 +328,15 @@ export function ImpostazioniPageClient({
     value: WalletWalletVisualConfig[K]
   ) {
     setWalletConfigNotice(null);
-    setWalletVisualConfig((current) => ({ ...current, [key]: value }));
+    setWalletVisualConfig((current) => {
+      const nextConfig = { ...current, [key]: value };
+
+      if (key === 'stripURL') {
+        return normalizeWalletWalletConfig(nextConfig);
+      }
+
+      return nextConfig;
+    });
   }
 
   function updateWalletField(
@@ -571,6 +585,67 @@ export function ImpostazioniPageClient({
                 </div>
               </div>
 
+              <div className="form-grid">
+                <div>
+                  <label className="muted" style={{ display: 'block', marginBottom: 6 }}>
+                    Logo URL o path pubblico
+                  </label>
+                  <input
+                    className="input"
+                    placeholder="/logo.png oppure https://..."
+                    value={walletVisualConfig.logoURL ?? ''}
+                    onChange={(e) => updateWalletConfig('logoURL', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="muted" style={{ display: 'block', marginBottom: 6 }}>
+                    Strip URL o path pubblico
+                  </label>
+                  <input
+                    className="input"
+                    placeholder="https://... oppure asset tessera"
+                    value={walletVisualConfig.stripURL ?? ''}
+                    onChange={(e) => updateWalletConfig('stripURL', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  borderRadius: 14,
+                  border: '1px solid #f59e0b',
+                  background: '#fffbeb',
+                  color: '#92400e',
+                  padding: 16,
+                  display: 'grid',
+                  gap: 8,
+                }}
+              >
+                <div style={{ fontWeight: 800 }}>
+                  Le immagini del pass reale funzionano solo con URL pubblici HTTPS e piano WalletWallet che supporta logoURL/stripURL.
+                </div>
+                <div style={{ fontSize: 14 }}>
+                  Fallback logo: <code>/logo.png</code>. Per la strip usa un asset pubblico HTTPS oppure l&apos;immagine centrale salvata nelle impostazioni tessera.
+                </div>
+              </div>
+
+              {stripLayoutActive ? (
+                <div
+                  style={{
+                    borderRadius: 14,
+                    border: '1px solid #0ea5e9',
+                    background: '#f0f9ff',
+                    color: '#0f172a',
+                    padding: 16,
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
+                  Con immagine centrale attiva, i Primary fields vengono disattivati per evitare sovrapposizioni nel pass reale.
+                </div>
+              ) : null}
+
               <div
                 style={{
                   border: '1px solid #e5e7eb',
@@ -615,23 +690,29 @@ export function ImpostazioniPageClient({
                 onChange={(index, key, value) => updateWalletField('headerFields', index, key, value)}
               />
 
-              <WalletFieldsEditor
-                title="Primary fields (max 1)"
-                description="Il provider reale supporta in modo pulito un solo primary field. Il nome completo non va qui."
-                fields={walletVisualConfig.primaryFields}
-                limit={WALLETWALLET_FIELD_LIMITS.primaryFields}
-                warning={
-                  walletConfigNotice?.section === 'primaryFields' ? walletConfigNotice.message : null
-                }
-                onAdd={() => addWalletField('primaryFields')}
-                onRemove={(index) => removeWalletField('primaryFields', index)}
-                onChange={(index, key, value) => updateWalletField('primaryFields', index, key, value)}
-              />
+              {!stripLayoutActive ? (
+                <WalletFieldsEditor
+                  title="Primary fields (max 1)"
+                  description="Usane al massimo uno solo quando non stai usando la strip image centrale."
+                  fields={walletVisualConfig.primaryFields}
+                  limit={WALLETWALLET_FIELD_LIMITS.primaryFields}
+                  warning={
+                    walletConfigNotice?.section === 'primaryFields'
+                      ? walletConfigNotice.message
+                      : null
+                  }
+                  onAdd={() => addWalletField('primaryFields')}
+                  onRemove={(index) => removeWalletField('primaryFields', index)}
+                  onChange={(index, key, value) =>
+                    updateWalletField('primaryFields', index, key, value)
+                  }
+                />
+              ) : null}
 
               <WalletFieldsEditor
                 title="Secondary fields"
-                description="Griglia principale da usare per nome, codice tessera, scadenza e altri dati frontali."
-                fields={walletVisualConfig.secondaryFields}
+                description="Griglia principale sotto l'immagine da usare per nome, codice tessera, scadenza e altri dati frontali."
+                fields={normalizedWalletConfig.secondaryFields}
                 limit={WALLETWALLET_FIELD_LIMITS.secondaryFields}
                 warning={
                   walletConfigNotice?.section === 'secondaryFields'
@@ -661,18 +742,20 @@ export function ImpostazioniPageClient({
           <div className="card">
             <div className="eyebrow">Anteprima Wallet</div>
             <div className="muted" style={{ marginTop: 8 }}>
-              Anteprima simulata del layout reale supportato dal provider WalletWallet. Per evitare
-              sovrapposizioni, il pass usa un solo primary field.
+              Anteprima simulata del layout reale supportato dal provider WalletWallet con header, strip centrale pulita, dati sotto immagine e QR in basso.
             </div>
             <div style={{ marginTop: 12 }}>
               <WalletWalletPassPreview
                 logoText={walletPreviewPayload.logoText || normalizedWalletConfig.logoText}
                 colorPreset={walletPreviewPayload.colorPreset || normalizedWalletConfig.colorPreset}
+                logoURL={walletPreviewPayload.logoURL}
+                stripURL={walletPreviewPayload.stripURL}
+                backgroundColor={walletPreviewPayload.backgroundColor}
                 headerFields={walletPreviewPayload.headerFields ?? []}
-                primaryFields={walletPreviewPayload.primaryFields ?? []}
                 secondaryFields={walletPreviewPayload.secondaryFields ?? []}
                 backFields={walletPreviewPayload.backFields ?? []}
                 barcodeValue={walletPreviewPayload.barcodeValue}
+                assetWarnings={walletResolvedAssets.warnings}
               />
             </div>
           </div>

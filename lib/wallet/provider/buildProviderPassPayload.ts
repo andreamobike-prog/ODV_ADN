@@ -1,5 +1,6 @@
 import type { WalletSubject } from '@/lib/wallet/types';
 import { normalizeWalletWalletConfig } from '@/lib/wallet/provider/normalizeWalletWalletConfig';
+import { resolveWalletWalletAssets } from '@/lib/wallet/provider/resolveWalletWalletAssets';
 import type {
   WalletField,
   WalletWalletPayload,
@@ -33,6 +34,7 @@ export function buildProviderPassPayload(
   const normalizedConfig = normalizeWalletWalletConfig(config);
   const replacements = {
     fullName: subject.fullName ?? '',
+    fullNameUpper: subject.fullName?.toUpperCase() ?? '',
     cardNumber: subject.cardNumber ?? '',
     roleLabel: subject.roleLabel ?? '',
     email: subject.email ?? '',
@@ -40,15 +42,28 @@ export function buildProviderPassPayload(
     expiryDate: subject.expiryDate ?? '',
     associationName: subject.associationName ?? normalizedConfig.logoText ?? '',
   };
+  const assets = resolveWalletWalletAssets(normalizedConfig);
+  const stripLayoutActive = Boolean(assets.stripURL || normalizedConfig.stripURL?.trim());
+
+  const headerFields = resolveFields(normalizedConfig.headerFields, replacements);
+  const secondaryFields = resolveFields(normalizedConfig.secondaryFields, replacements);
+  const backFields = resolveFields(normalizedConfig.backFields, replacements);
+  const primaryFields = stripLayoutActive
+    ? undefined
+    : resolveFields(normalizedConfig.primaryFields, replacements);
 
   return {
     barcodeValue: subject.cardNumber?.trim() || subject.qrValue?.trim() || subject.id,
     barcodeFormat: 'QR',
     logoText: normalizedConfig.logoText,
     colorPreset: normalizedConfig.colorPreset,
-    headerFields: resolveFields(normalizedConfig.headerFields, replacements),
-    primaryFields: resolveFields(normalizedConfig.primaryFields, replacements),
-    secondaryFields: resolveFields(normalizedConfig.secondaryFields, replacements),
-    backFields: resolveFields(normalizedConfig.backFields, replacements),
+    logoURL: assets.logoURL,
+    stripURL: assets.stripURL,
+    backgroundColor: assets.backgroundColor,
+    headerFields,
+    ...(primaryFields ? { primaryFields } : {}),
+    secondaryFields,
+    auxiliaryFields: [],
+    backFields,
   };
 }
